@@ -1,4 +1,5 @@
-from sqlalchemy import Column
+from sqlalchemy import Column, Text, Float, SmallInteger, BigInteger, Date, \
+    DateTime, VARCHAR, CHAR, Time, Boolean
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
@@ -33,6 +34,26 @@ class Address(Base):
 
     def __repr__(self):
         return f"Address(id={self.id!r}, email_address={self.email_address!r})"
+
+
+class BasicTypes(Base):
+    __tablename__ = "basic_type"
+    id = Column(Integer, primary_key=True)  # autoincrement
+    int = Column(Integer)
+    # smallint, bigint?
+    smallint = Column(SmallInteger)
+    bigint = Column(BigInteger)
+    float = Column(Float)  # real
+    double = Column(Float)  # TODO: Double type in sqlalchemy == ???
+    text = Column(Text)
+    char = Column(CHAR(8))
+    varchar = Column(VARCHAR(8))
+    # charN varcharN ?
+    date = Column(Date)
+    time = Column(Time)
+    datetime = Column(DateTime)
+    # TODO: also with timezones?
+    bool = Column(Boolean)
 
 
 engine = create_engine(PYDBCLI_DATABASE_URL, echo=True, future=True)
