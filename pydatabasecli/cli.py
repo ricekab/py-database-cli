@@ -16,14 +16,13 @@ TODO feature list
 * Parse option / env var for date, time and, datetime formats. See const.py
 """
 
-import click
-
 import datetime
+
+import click
+from sqlalchemy import select, insert, or_, and_
 
 from pydatabasecli import const
 from pydatabasecli.db import get_metadata, get_engine
-
-from sqlalchemy import select, insert, delete, or_, and_
 
 
 class __NoValue(object):
@@ -68,6 +67,7 @@ def _generate_table_commands(table):
     def _table_cmd_grp():
         pass
 
+    # TODO: skip and limit options
     @click.option(
         '--filter-by', '-filter', '-where',
         multiple=True,
@@ -100,6 +100,7 @@ def _generate_table_commands(table):
             # TODO: Display rows with some formatter
             click.echo(rows)
 
+    # TODO: Confirmation & auto-accept prompt
     @click.option(
         '--values', '-values',
         multiple=True,
@@ -116,6 +117,8 @@ def _generate_table_commands(table):
             Generates this statement
 
             INSERT INTO "user" (name, role) VALUES (:name, :role)
+            
+            With name equal to "abc" and role equal to "user".
             '''.strip())
     def _table_insert(values, **values_dict):
         # Filter out None, explicit None messes with inserted_primary_key
@@ -133,13 +136,13 @@ def _generate_table_commands(table):
                 click.echo(f'{pkey}: {res.inserted_primary_key[idx]}')
 
     # TODO: filter + values option
-    # TODO: Confirmation auto-accept prompy
+    # TODO: Confirmation & auto-accept prompt
     # TODO: Option to skip 'select' verification
     def _table_update(**kwargs):
         raise NotImplementedError()
 
     # TODO: filter option
-    # TODO: Confirmation auto-accept prompy
+    # TODO: Confirmation & auto-accept prompt
     # TODO: Option to skip 'select' verification
     def _table_delete(**kwargs):
         raise NotImplementedError()
