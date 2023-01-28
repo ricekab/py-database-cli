@@ -13,10 +13,14 @@ TODO feature list
 * Specify custom separator for values via cli option or env var
   (default can remain ','). Useful for insert with long strings that could use
   that symbols.
+* Parse option / env var for date, time and, datetime formats. See const.py
 """
 
 import click
 
+import datetime
+
+from pydatabasecli import const
 from pydatabasecli.db import get_metadata, get_engine
 
 from sqlalchemy import select, insert, delete, or_, and_
@@ -200,9 +204,53 @@ def _generate_table_commands(table):
                 column = getattr(table.c, key)
                 print(f'Data type cast: {column.type.python_type}')
                 # TODO: Date // Time // DateTime breaks depending on format
-                values_dict[key] = column.type.python_type(value)
+                values_dict[key] = _parse_value_for_type(
+                    value, column.type.python_type)
+                # values_dict[key] = column.type.python_type(value)
                 # values_dict[key] = value
         return values_dict
+
+
+def _parse_value_for_type(value_str: str, type_):
+    """
+    Parses a value in string format to an instance of the correct Python type.
+
+    :param value_str:
+    :param type_:
+    :return:
+    """
+    if type_ is datetime.datetime:
+        return _parse_value_as_datetime(value_str)
+    if type_ is datetime.date:
+        return _parse_value_as_date(value_str)
+    if type_ is datetime.time:
+        return _parse_value_as_time(value_str)
+    return type_(value_str)
+
+
+def _parse_value_as_datetime(value_str, format_=const.PYDBCLI_DATETIME_FORMAT):
+    """
+    Attempt to parse the value as a datetime.
+
+    First we attempt to parse it from ISO format. Failing that, the provided
+    format is used to identify it.
+
+    :param value_str:
+    :return:
+    """
+    try:
+        return datetime.datetime.fromisoformat(value_str)
+    except ValueError:
+        pass  # Not isoformat, continue.
+    return datetime.datetime.strptime(value_str, format_)
+
+
+def _parse_value_as_date(value_str):
+    raise NotImplementedError()
+
+
+def _parse_value_as_time(value_str):
+    raise NotImplementedError()
 
 
 @cli.command(help='List all tables.')
