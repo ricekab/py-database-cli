@@ -1,4 +1,4 @@
-'''
+"""
 schema
     list-tables  -- show tables
 [TABLENAME]
@@ -7,7 +7,13 @@ schema
     select <id>
     find [...filters...] [--delete]
     delete <pkeys>
-'''
+
+TODO feature list
+
+* Specify custom separator for values via cli option or env var
+  (default can remain ','). Useful for insert with long strings that could use
+  that symbols.
+"""
 
 import click
 
@@ -52,7 +58,7 @@ def _generate_table_commands(table):
 
     primary_key_names = [c.name for c in table.primary_key.columns]
 
-    #TODO: Alias with '_' removed?
+    # TODO: Alias with '_' removed?
     @click.group(name=table.name,
                  help=f'Perform queries against "{table.name}" table.')
     def _table_cmd_grp():
@@ -161,7 +167,6 @@ def _generate_table_commands(table):
     _table_cmd_grp.command(name='delete')(_table_delete)
     cli.add_command(_table_cmd_grp)
 
-
     def _parse_filter_option(filter_by_list: list) -> or_:
         """
 
@@ -176,19 +181,22 @@ def _generate_table_commands(table):
         filter_list = list()
         for filter_by_clause in filter_by_list:
             filter_expressions = list()
-            for filter_kwarg in filter_by_clause.split(','):
-                key, value = filter_kwarg.split('=')
+            for filter_kv_str in filter_by_clause.split(','):
+                fragments = filter_kv_str.split('=')
+                key = fragments[0]
+                value = '='.join(fragments[1:])
                 column = getattr(table.c, key)
                 filter_expressions.append(column == value)
             filter_list.append(and_(*filter_expressions))
         return or_(*filter_list)
 
-
     def _parse_values_option(values: list) -> dict:
         values_dict = dict()
         for values_str in values:
             for kv_str in values_str.split(','):
-                key, value = kv_str.split('=')
+                fragments = kv_str.split('=')
+                key = fragments[0]
+                value = '='.join(fragments[1:])
                 column = getattr(table.c, key)
                 print(f'Data type cast: {column.type.python_type}')
                 # TODO: Date // Time // DateTime breaks depending on format
