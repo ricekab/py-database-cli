@@ -91,7 +91,7 @@ def _generate_table_commands(table):
         '''.strip())
     def _table_select(filter_by):
         stmt = select(table)
-        filter_construct = _parse_filter_option(filter_by)
+        filter_construct = _parse_filter_option(table, filter_by)
         stmt = stmt.where(filter_construct)
         engine = get_engine()
         with engine.connect() as conn:
@@ -122,7 +122,7 @@ def _generate_table_commands(table):
             '''.strip())
     def _table_insert(values, **values_dict):
         # Filter out None, explicit None messes with inserted_primary_key
-        values_dict = _parse_values_option(values)
+        values_dict = _parse_values_option(table, values)
         values_dict.update({k: v for k, v in values_dict.items() if v})
         stmt = insert(table).values(**values_dict)
         print(values_dict)  # TODO: Debug log statement
@@ -174,44 +174,46 @@ def _generate_table_commands(table):
     _table_cmd_grp.command(name='delete')(_table_delete)
     cli.add_command(_table_cmd_grp)
 
-    def _parse_filter_option(filter_by_list: list) -> or_:
-        """
 
-        :param table: SQLAlchemy table instance for which this filter is parsed.
-        :param filter_by_list: List of filter_by clauses. Each entry of the list
-            is combined using OR. A single entry may contain multiple keywords,
-            separated by ','.
+def _parse_filter_option(table, filter_by_list: list) -> or_:
+    """
 
-            Example: ['name=myname,role=admin', 'name=other,role=user']
-        :return: The sqlalchemy or clause.
-        """
-        filter_list = list()
-        for filter_by_clause in filter_by_list:
-            filter_expressions = list()
-            for filter_kv_str in filter_by_clause.split(','):
-                fragments = filter_kv_str.split('=')
-                key = fragments[0]
-                value = '='.join(fragments[1:])
-                column = getattr(table.c, key)
-                filter_expressions.append(column == value)
-            filter_list.append(and_(*filter_expressions))
-        return or_(*filter_list)
+    :param table: SQLAlchemy table instance for which this filter is parsed.
+    :param filter_by_list: List of filter_by clauses. Each entry of the list
+        is combined using OR. A single entry may contain multiple keywords,
+        separated by ','.
 
-    def _parse_values_option(values: list) -> dict:
-        values_dict = dict()
-        for values_str in values:
-            for kv_str in values_str.split(','):
-                fragments = kv_str.split('=')
-                key = fragments[0]
-                value = '='.join(fragments[1:])
-                column = getattr(table.c, key)
-                print(f'Data type cast: {column.type.python_type}')
-                # TODO: Date // Time // DateTime breaks depending on format
-                values_dict[key] = _parse_value_for_type(
-                    value, column.type.python_type)
-                # values_dict[key] = column.type.python_type(value)
-                # values_dict[key] = value
-        return values_dict
+        Example: ['name=myname,role=admin', 'name=other,role=user']
+    :return: The sqlalchemy or clause.
+    """
+    filter_list = list()
+    for filter_by_clause in filter_by_list:
+        filter_expressions = list()
+        for filter_kv_str in filter_by_clause.split(','):
+            fragments = filter_kv_str.split('=')
+            key = fragments[0]
+            value = '='.join(fragments[1:])
+            column = getattr(table.c, key)
+            filter_expressions.append(column == value)
+        filter_list.append(and_(*filter_expressions))
+    return or_(*filter_list)
+
+
+def _parse_values_option(table, values: list) -> dict:
+    values_dict = dict()
+    for values_str in values:
+        for kv_str in values_str.split(','):
+            fragments = kv_str.split('=')
+            key = fragments[0]
+            value = '='.join(fragments[1:])
+            column = getattr(table.c, key)
+            print(f'Data type cast: {column.type.python_type}')
+            # TODO: Date // Time // DateTime breaks depending on format
+            values_dict[key] = _parse_value_for_type(
+                value, column.type.python_type)
+            # values_dict[key] = column.type.python_type(value)
+            # values_dict[key] = value
+    return values_dict
 
 
 def _parse_value_for_type(value_str: str, type_):
