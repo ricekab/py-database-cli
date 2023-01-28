@@ -1,10 +1,16 @@
 from sqlalchemy import create_engine, MetaData
 
 from pydatabasecli.const import PYDBCLI_DATABASE_URL
+from pydatabasecli.exceptions import PyDBCLIBadConnectionURLError
 
 
 def get_engine(db_connection_url=PYDBCLI_DATABASE_URL):
-    return create_engine(db_connection_url, future=True)
+    try:
+        return create_engine(db_connection_url, future=True)
+    except Exception:
+        raise PyDBCLIBadConnectionURLError(
+            f'Could not connect to database. Is PYDBCLI_DATABASE_URL defined?'
+        )
 
 
 def get_metadata(db_connection_url=PYDBCLI_DATABASE_URL):

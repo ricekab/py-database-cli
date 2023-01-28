@@ -52,6 +52,7 @@ def _generate_table_commands(table):
 
     primary_key_names = [c.name for c in table.primary_key.columns]
 
+    #TODO: Alias with '_' removed?
     @click.group(name=table.name,
                  help=f'Perform queries against "{table.name}" table.')
     def _table_cmd_grp():
