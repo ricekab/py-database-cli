@@ -1,3 +1,7 @@
+# Local sqlite instance for testing
+db.sql
+
+# IDEA project files
 .idea/
 
 # Byte-compiled / optimized / DLL files
