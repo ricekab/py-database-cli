@@ -250,12 +250,20 @@ def _parse_value_as_datetime(value_str, format_=const.PYDBCLI_DATETIME_FORMAT):
     return datetime.datetime.strptime(value_str, format_)
 
 
-def _parse_value_as_date(value_str):
-    raise NotImplementedError()
+def _parse_value_as_date(value_str, format_=const.PYDBCLI_DATE_FORMAT):
+    try:
+        return datetime.date.fromisoformat(value_str)
+    except ValueError:
+        pass
+    return datetime.datetime.strptime(value_str, format_).date()
 
 
-def _parse_value_as_time(value_str):
-    raise NotImplementedError()
+def _parse_value_as_time(value_str,  format_=const.PYDBCLI_TIME_FORMAT):
+    try:
+        datetime.time.fromisoformat(value_str)
+    except ValueError:
+        pass
+    return datetime.datetime.strptime(value_str, format_).time()
 
 
 @cli.command(help='List all tables.')
